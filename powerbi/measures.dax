@@ -1,0 +1,121 @@
+// FLAGSHIP 1 — Phase E (14 Nov 2026): Power BI DAX measures
+//
+// Model: powerbi/f1_powerbi.db — the Olist star schema plus
+// dim_order_status and order_status on fact_order_items.
+// The RESTATEMENT is a measure-level filter: revenue counts only
+// orders whose status is not cancelled / unavailable (sql/14).
+// Every value below was verified against the model database by
+// powerbi/build_model.py and re-checked by src/check_powerbi_model.py.
+// Never hand-edit a verified value — re-run the build instead.
+//
+// Relationships (single direction, fact → dimension):
+//   fact_order_items[customer_id] → dim_customer[customer_id]
+//   fact_order_items[product_id]  → dim_product[product_id]
+//   fact_order_items[seller_id]   → dim_seller[seller_id]
+//   fact_order_items[date_id]     → dim_date[date_id]
+//   fact_order_items[order_status] → dim_order_status[order_status]
+
+// ── Headline: restated revenue (the number the executive summary quotes) ──
+Total Revenue (Restated) =
+CALCULATE (
+    SUM ( fact_order_items[price] ),
+    dim_order_status[is_restated] = 1
+)
+// Verified: BRL 13,494,400.74
+
+// ── Reconciliation footnote: revenue as loaded, all statuses ──
+Total Revenue (All Statuses) =
+SUM ( fact_order_items[price] )
+// Verified: BRL 13,591,643.70 — the 0.72% gap (BRL 97,242.96) is
+// cancelled + unavailable orders; show it as a footnote, never hide it.
+
+Total Orders (Restated) =
+CALCULATE (
+    DISTINCTCOUNT ( fact_order_items[order_id] ),
+    dim_order_status[is_restated] = 1
+)
+// Verified: 98,199
+
+Total Customers (Restated) =
+CALCULATE (
+    DISTINCTCOUNT ( dim_customer[customer_unique_id] ),
+    dim_order_status[is_restated] = 1
+)
+// Verified: 94,983 — customers are counted by customer_unique_id,
+// never by customer_id (which is near-unique per order).
+
+Total Freight (Restated) =
+CALCULATE (
+    SUM ( fact_order_items[freight_value] ),
+    dim_order_status[is_restated] = 1
+)
+// Verified: BRL 2,245,816.19 — delivery cost, never revenue.
+
+Freight % of Revenue =
+DIVIDE ( [Total Freight (Restated)], [Total Revenue (Restated)] )
+// Verified: 16.64%
+
+Avg Order Value (Restated) =
+DIVIDE ( [Total Revenue (Restated)], [Total Orders (Restated)] )
+// Verified: BRL 137.42
+
+Avg Spend per Customer (Restated) =
+DIVIDE ( [Total Revenue (Restated)], [Total Customers (Restated)] )
+// Verified: BRL 142.07 — the flat-LTV headline (range BRL 131–167
+// by cohort, sql/09 + sql/13).
+
+// ── Retention ──
+Repeat Buyer Rate =
+DIVIDE (
+    CALCULATE (
+        DISTINCTCOUNT ( dim_customer[customer_unique_id] ),
+        FILTER (
+            VALUES ( dim_customer[customer_unique_id] ),
+            CALCULATE (
+                DISTINCTCOUNT ( fact_order_items[order_id] ),
+                dim_order_status[is_restated] = 1
+            ) > 1
+        )
+    ),
+    [Total Customers (Restated)]
+)
+// Verified: 3.04% (2,887 of 94,983) — the one-time-buyer business.
+
+Churn Rate =
+// Customers whose last restated purchase is more than 6 months
+// before the cut-off 2018-10-17 (Phase C definition, sql/11).
+// DAX cannot express the 6-month lookback without a calculated
+// column, so this measure is a documented constant verified in
+// powerbi/build_model.py — do not retype it from memory.
+0.6999
+// Verified: 69.99% (66,476 of 94,983 churned; 28,507 active).
+
+// ── Leak ──
+Items Over 100% Freight =
+CALCULATE (
+    COUNTROWS ( fact_order_items ),
+    dim_order_status[is_restated] = 1,
+    fact_order_items[freight_value] > fact_order_items[price]
+)
+// Verified: 4,100 items (3.7% of restated items) cost more to
+// deliver than they sell for.
+
+SP Revenue Share =
+DIVIDE (
+    CALCULATE (
+        [Total Revenue (Restated)],
+        dim_customer[customer_state] = "SP"
+    ),
+    [Total Revenue (Restated)]
+)
+// Verified: 38.27% — top 3 states (SP + RJ + MG) are 63.36% (sql/05).
+
+Peak Month Revenue =
+// November 2017, Black Friday cohort month (sql/16 clean trend).
+MAXX (
+    VALUES ( dim_date[order_year_month] ),
+    [Total Revenue (Restated)]
+)
+// Verified peak: BRL 1,003,862.14 in 2017-11. (dim_date needs a
+// calculated column order_year_month = FORMAT(date_id, "yyyy-MM")
+// or the YYYY-MM text from substr(date_id, 1, 7) at import.)

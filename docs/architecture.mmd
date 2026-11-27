@@ -1,0 +1,63 @@
+%% FLAGSHIP 1 — Architecture diagram (Phase F prep, 17 Nov 2026, DRAFT)
+%% E-commerce Revenue, Cohort & Churn — real Brazilian Olist dataset.
+%% Every number below is verified: powerbi/verified_measures.json,
+%% analysis/validation_notes.md, PLAN.md. The .pbix is NOT built yet
+%% (needs Power BI Desktop on Windows) — shown dashed, never faked.
+%% Render: npx -y @mermaid-js/mermaid-cli -i docs/architecture.mmd -o outputs/architecture_diagram.png
+
+flowchart TB
+
+    subgraph SRC["1 · SOURCE — raw data"]
+        direction TB
+        A["Olist Brazilian e-commerce<br/>public dataset · Sep 2016 – Aug 2018<br/>github.com/olist/work-at-olist-data"]
+        B["5 raw CSVs in data/raw/<br/>customers · orders · order_items<br/>products · sellers"]
+        C["src/download_olist.py<br/>header-checked download"]
+        A --> C --> B
+    end
+
+    subgraph ING["2 · INGEST — load + data-quality checks"]
+        direction TB
+        D["src/ingest.py<br/>staging first, then star schema"]
+        E["DQ checks as code<br/>missing keys · negative prices<br/>missing order dates → rejected"]
+        F["112,650 rows kept · 0 rejected"]
+        B --> D --> E --> F
+    end
+
+    subgraph DB["3 · STORE — star schema · SQLite"]
+        direction TB
+        G["data/processed/f1.db<br/>schema: sql/schema.sql"]
+        H["fact_order_items<br/>112,650 rows · one row per item"]
+        I["dim_customer 99,441<br/>dim_product 32,951<br/>dim_seller 3,095<br/>dim_date 634"]
+        F --> G --> H
+        G --> I
+    end
+
+    subgraph SQL["4 · ANALYSE — SQL query pack"]
+        direction TB
+        J["16 numbered queries · sql/01–16<br/>revenue leak · cohorts · RFM &amp; churn"]
+        K["Validation: 11 headlines reconciled<br/>3 ways — sql/12 + src/validate_headlines.py"]
+        L["Restatement: sql/14<br/>cancelled + unavailable excluded<br/>revenue BRL 13,494,400.74"]
+        H --> J --> K --> L
+        I --> J
+    end
+
+    subgraph PBI["5 · VISUALISE — Power BI model"]
+        direction TB
+        M["powerbi/build_model.py<br/>→ powerbi/f1_powerbi.db<br/>star schema + dim_order_status"]
+        N["12 DAX measures + 1 footnote measure<br/>powerbi/measures.dax"]
+        O["Verified: powerbi/verified_measures.json<br/>Revenue BRL 13,494,400.74 · Orders 98,199<br/>Customers 94,983 · Churn 69.99%<br/>Freight 16.64% · AOV BRL 137.42"]
+        L --> M --> N --> O
+    end
+
+    subgraph PUB["6 · PUBLISH — report"]
+        direction TB
+        P["3 pages: Overview · Revenue leak<br/>Cohorts &amp; churn<br/>previews in outputs/page1–3.png"]
+        Q[".pbix — NOT YET BUILT<br/>needs Power BI Desktop on Windows<br/>publish guide: powerbi/publish-guide.md"]
+        R["Published report link<br/>— empty until the .pbix exists —"]
+        O --> P --> Q --> R
+    end
+
+    classDef done fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef pending fill:#fff8e1,stroke:#f9a825,stroke-width:2px,stroke-dasharray:5 5;
+    class A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P done;
+    class Q,R pending;
