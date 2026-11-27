@@ -42,18 +42,18 @@ fix it, re-run, and say so plainly in the day's report.
 
 ## 3. README final (Phase F)
 
-- [ ] Status line no longer says DRAFT — it says LIVE with the
-      publish date and the repo link.
-- [ ] Every headline number matches `powerbi/verified_measures.json`
+- [x] Status line no longer says DRAFT — it says LIVE with the
+      publish date and the repo link. (DONE 27 Nov 2026)
+- [x] Every headline number matches `powerbi/verified_measures.json`
       and the Phase D notes (checked by
-      `src/check_phase_f_polish.py`).
-- [ ] File counts in the project-structure block match the repo
+      `src/check_phase_f_polish.py`). (DONE 27 Nov 2026 — polish check 68/68)
+- [x] File counts in the project-structure block match the repo
       (sql 16 + schema, src 12 check scripts + 2 render scripts,
-      analysis 12 notes, outputs 8 renders).
-- [ ] Power BI report link slot: filled with the published report
+      analysis 12 notes, outputs 8 renders). (DONE 27 Nov 2026 — polish check 68/68)
+- [x] Power BI report link slot: filled with the published report
       URL if the `.pbix` is built, otherwise still honestly empty
-      with the "not yet published" wording kept.
-- [ ] One-pager present (Phase F deliverable — see §6).
+      with the "not yet published" wording kept. (DONE 27 Nov 2026 — .pbix NOT built, wording kept)
+- [x] One-pager present (Phase F deliverable — see §6). (DONE 27 Nov 2026 — outputs/one_pager.pdf live)
 
 ## 4. The `.pbix` question (honest either way)
 
@@ -67,23 +67,23 @@ fix it, re-run, and say so plainly in the day's report.
 
 ## 5. Publish steps (proven flow)
 
-1. [ ] Browser task creates the empty public repo
-      `f1-ecommerce-revenue-cohort-churn`.
-2. [ ] GitHub App pushes all text files (README, PLAN, sql/, src/,
-      analysis/, docs/, powerbi/ — NO `.db`, NO raw CSVs).
-3. [ ] Browser task uploads the binaries into their matching
-      folders: `outputs/` (8 PNGs).
-4. [ ] Verify live: every file present in its correct folder;
-      every binary byte-size matched against the local original.
-5. [ ] Proprietary LICENSE pushed to the repo root
+1. [x] Browser task creates the empty public repo
+      `f1-ecommerce-revenue-cohort-churn`. (DONE 27 Nov 2026)
+2. [x] GitHub App pushes all text files (README, PLAN, sql/, src/,
+      analysis/, docs/, powerbi/ — NO `.db`, NO raw CSVs). (DONE 27 Nov 2026 — commit 8f55b88b, 62 files)
+3. [x] Browser task uploads the binaries into their matching
+      folders: `outputs/` (8 PNGs + one_pager.pdf). (DONE 27 Nov 2026 — commit 1883dda)
+4. [x] Verify live: every file present in its correct folder;
+      every binary byte-size matched against the local original. (DONE 27 Nov 2026 — 18/20 blob SHAs identical, 2 largest size-verified)
+5. [x] Proprietary LICENSE pushed to the repo root
       (`python3 ~/workspace/license-push/run_batch.py
-      f1-ecommerce-revenue-cohort-churn`) and verified live.
-6. [ ] Profile README library table updated with the live repo
+      f1-ecommerce-revenue-cohort-churn`) and verified live. (DONE 27 Nov 2026 — commit ac8299f7, blob SHA c21c637a)
+6. [x] Profile README library table updated with the live repo
       link (download the live README first, byte-match, add the
-      row, push, verify live).
-7. [ ] Second-pass review: re-check the repo, the records
+      row, push, verify live). (DONE 27 Nov 2026 — commit 411fc4c0)
+7. [x] Second-pass review: re-check the repo, the records
       (TRACKER.md, SCHEDULE.md) and the profile table, fix or
-      report any gap plainly, once.
+      report any gap plainly, once. (DONE 27 Nov 2026 — 10 spot-check files live; records updated)
 
 ## 6. Still open before publish day
 
